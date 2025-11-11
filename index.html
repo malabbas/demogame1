@@ -79,6 +79,12 @@
       transform: translateY(2px);
     }
 
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .scoreboard {
       display: flex;
       flex-wrap: wrap;
@@ -121,7 +127,7 @@
       width: 100%;
     }
 
-    form {
+    .form-panel {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -130,6 +136,9 @@
       background: #fff;
       max-width: 420px;
       width: 100%;
+    }
+
+    #leadForm {
       display: none;
     }
 
@@ -142,13 +151,38 @@
     }
 
     input[type="text"],
-    input[type="email"] {
+    input[type="email"],
+    input[type="tel"] {
       border: 3px solid var(--border-color);
       padding: 0.5rem;
       background: #f9fbe7;
       font-family: inherit;
       font-size: 1rem;
       color: var(--text-color);
+    }
+
+    .error {
+      color: #b00020;
+      font-size: 0.75rem;
+      min-height: 1.25rem;
+    }
+
+    .rules {
+      border: 3px solid var(--border-color);
+      padding: 1rem;
+      background: #fff;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .rules ul {
+      margin: 0.5rem 0 0;
+      padding-left: 1.25rem;
+    }
+
+    .rules li {
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
     }
 
     .message {
@@ -177,7 +211,34 @@
     <img class="logo" alt="Domino's Logo" id="logoImage" />
     <h1>Pizza Rush – Win 10 Large Pizzas!</h1>
     <p>Concept demo. Not affiliated with Domino's Pizza.</p>
-    <button class="button" id="startButton">Start Game</button>
+    <form id="playerForm" class="form-panel" novalidate>
+      <label>
+        First Name
+        <input type="text" id="firstNameField" name="firstName" autocomplete="given-name" required />
+      </label>
+      <label>
+        Last Name
+        <input type="text" id="lastNameField" name="lastName" autocomplete="family-name" required />
+      </label>
+      <label>
+        Email
+        <input type="email" id="emailField" name="email" autocomplete="email" required />
+      </label>
+      <label>
+        Phone Number
+        <input type="tel" id="phoneField" name="phone" autocomplete="tel" required />
+      </label>
+    </form>
+    <div class="rules" id="gameRules">
+      <h2>Game Rules</h2>
+      <ul>
+        <li>Use the arrow keys or WASD to guide the delivery driver.</li>
+        <li>Avoid moving traffic blocks—colliding sends you back to the start.</li>
+        <li>Collect 10 pizzas as fast as you can to win the grand prize.</li>
+      </ul>
+    </div>
+    <div class="error" id="startError"></div>
+    <button class="button" id="startButton" type="button" disabled>Start Game</button>
   </div>
 
   <canvas id="gameCanvas" width="320" height="240"></canvas>
@@ -193,14 +254,14 @@
     <p>Enter your info to claim (demo only).</p>
   </div>
 
-  <form id="leadForm">
+  <form id="leadForm" class="form-panel">
     <label>
       Name
       <input type="text" id="nameField" required />
     </label>
     <label>
       Email
-      <input type="email" id="emailField" required />
+      <input type="email" id="leadEmailField" required />
     </label>
     <button class="button" type="submit">Submit</button>
   </form>
@@ -214,6 +275,8 @@
 
     const startScreen = document.getElementById('startScreen');
     const startButton = document.getElementById('startButton');
+    const playerForm = document.getElementById('playerForm');
+    const startError = document.getElementById('startError');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
@@ -225,6 +288,8 @@
     const winScreen = document.getElementById('winScreen');
     const leadForm = document.getElementById('leadForm');
     const thankYou = document.getElementById('thankYou');
+
+    const startInputs = playerForm.querySelectorAll('input');
 
     document.getElementById('logoImage').src = logoData;
 
@@ -255,6 +320,12 @@
       window.addEventListener('keyup', (e) => {
         keys[e.code] = false;
       });
+      playerForm.addEventListener('submit', (event) => event.preventDefault());
+      startInputs.forEach((input) => {
+        input.addEventListener('input', validateStartForm);
+        input.addEventListener('blur', validateStartForm);
+      });
+      validateStartForm();
     }
 
     function startGame() {
@@ -268,6 +339,24 @@
       startTime = performance.now();
       lastTime = performance.now();
       requestAnimationFrame(gameLoop);
+    }
+
+    function validateStartForm() {
+      const isValid = playerForm.checkValidity();
+      startButton.disabled = !isValid;
+      if (isValid) {
+        startError.textContent = '';
+      }
+      return isValid;
+    }
+
+    function handleStartClick() {
+      if (!validateStartForm()) {
+        startError.textContent = 'Please complete all fields before starting the game.';
+        playerForm.reportValidity();
+        return;
+      }
+      startGame();
     }
 
     function resetGame() {
@@ -472,7 +561,7 @@
       thankYou.style.display = 'block';
     });
 
-    startButton.addEventListener('click', startGame);
+    startButton.addEventListener('click', handleStartClick);
 
     initGame();
     draw();
