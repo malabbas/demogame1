@@ -75,6 +75,62 @@
       transform: translateY(2px);
     }
 
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, clamp(48px, 18vw, 64px));
+      grid-template-areas:
+        '. up .'
+        'left . right'
+        '. down .';
+      width: min(90vw, 360px);
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+      touch-action: none;
+    }
+
+    .dpad-button {
+      border: 4px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -4px 0 rgba(7, 7, 7, 0.35);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .dpad-button:focus {
+      outline: none;
+      box-shadow: inset 0 -4px 0 rgba(7, 7, 7, 0.35), 0 0 0 3px rgba(7, 7, 7, 0.45);
+    }
+
+    .dpad-button:active,
+    .dpad-button.pressed {
+      transform: translateY(2px);
+      box-shadow: inset 0 4px 0 rgba(7, 7, 7, 0.35);
+    }
+
+    .dpad-button.up {
+      grid-area: up;
+    }
+
+    .dpad-button.left {
+      grid-area: left;
+    }
+
+    .dpad-button.right {
+      grid-area: right;
+    }
+
+    .dpad-button.down {
+      grid-area: down;
+    }
+
     .disclaimer {
       font-size: 0.55rem;
       text-align: center;
@@ -91,12 +147,19 @@
   <div class="game-shell">
     <canvas id="game" width="320" height="288"></canvas>
     <button id="replay" class="replay">Play Again</button>
+    <div class="dpad" aria-label="Directional controls">
+      <button class="dpad-button up" data-direction="up" aria-label="Move up">▲</button>
+      <button class="dpad-button left" data-direction="left" aria-label="Move left">◀</button>
+      <button class="dpad-button right" data-direction="right" aria-label="Move right">▶</button>
+      <button class="dpad-button down" data-direction="down" aria-label="Move down">▼</button>
+    </div>
     <p class="disclaimer">Concept demo. Not affiliated with Domino’s Pizza.</p>
   </div>
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const replayButton = document.getElementById('replay');
+    const dpadButtons = document.querySelectorAll('.dpad-button');
 
     // Tunable game values
     const PIZZAS_TO_WIN = 10; // Number of pizzas required to win
@@ -123,6 +186,20 @@
     });
 
     const keyState = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+    };
+
+    const keyboardState = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+    };
+
+    const dpadState = {
       up: false,
       down: false,
       left: false,
@@ -159,18 +236,22 @@
         switch (event.key.toLowerCase()) {
           case 'arrowup':
           case 'w':
+            keyboardState.up = true;
             keyState.up = true;
             break;
           case 'arrowdown':
           case 's':
+            keyboardState.down = true;
             keyState.down = true;
             break;
           case 'arrowleft':
           case 'a':
+            keyboardState.left = true;
             keyState.left = true;
             break;
           case 'arrowright':
           case 'd':
+            keyboardState.right = true;
             keyState.right = true;
             break;
           case 'enter':
@@ -188,19 +269,23 @@
         switch (event.key.toLowerCase()) {
           case 'arrowup':
           case 'w':
-            keyState.up = false;
+            keyboardState.up = false;
+            keyState.up = keyboardState.up || dpadState.up;
             break;
           case 'arrowdown':
           case 's':
-            keyState.down = false;
+            keyboardState.down = false;
+            keyState.down = keyboardState.down || dpadState.down;
             break;
           case 'arrowleft':
           case 'a':
-            keyState.left = false;
+            keyboardState.left = false;
+            keyState.left = keyboardState.left || dpadState.left;
             break;
           case 'arrowright':
           case 'd':
-            keyState.right = false;
+            keyboardState.right = false;
+            keyState.right = keyboardState.right || dpadState.right;
             break;
         }
       });
@@ -217,7 +302,95 @@
         }
       });
 
+      setupDpadControls();
+
       requestAnimationFrame(gameLoop);
+    }
+
+    function setupDpadControls() {
+      if (!dpadButtons.length) {
+        return;
+      }
+      const activeTouchDirections = new Map();
+      const buttonByDirection = {};
+      const directions = ['up', 'down', 'left', 'right'];
+
+      const activateDirection = (dir, button) => {
+        dpadState[dir] = true;
+        keyState[dir] = true;
+        button.classList.add('pressed');
+      };
+
+      const deactivateDirection = (dir, button) => {
+        dpadState[dir] = false;
+        keyState[dir] = keyboardState[dir] || dpadState[dir];
+        button.classList.remove('pressed');
+      };
+
+      const resetAllDirections = () => {
+        activeTouchDirections.clear();
+        directions.forEach((dir) => {
+          if (!dpadState[dir]) return;
+          dpadState[dir] = false;
+          keyState[dir] = keyboardState[dir] || dpadState[dir];
+          const button = buttonByDirection[dir];
+          if (button) {
+            button.classList.remove('pressed');
+          }
+        });
+      };
+
+      dpadButtons.forEach((button) => {
+        const dir = button.dataset.direction;
+        buttonByDirection[dir] = button;
+
+        const handleMouseDown = (event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          activateDirection(dir, button);
+
+          const handleMouseUp = () => {
+            deactivateDirection(dir, button);
+            window.removeEventListener('mouseup', handleMouseUp);
+          };
+
+          window.addEventListener('mouseup', handleMouseUp);
+        };
+
+        const handleTouchStart = (event) => {
+          event.preventDefault();
+          Array.from(event.changedTouches).forEach((touch) => {
+            activeTouchDirections.set(touch.identifier, dir);
+          });
+          activateDirection(dir, button);
+        };
+
+        button.addEventListener('mousedown', handleMouseDown);
+        button.addEventListener('touchstart', handleTouchStart, { passive: false });
+      });
+
+      const handleTouchEnd = (event) => {
+        Array.from(event.changedTouches).forEach((touch) => {
+          const activeDir = activeTouchDirections.get(touch.identifier);
+          if (!activeDir) return;
+          activeTouchDirections.delete(touch.identifier);
+
+          const stillActive = Array.from(activeTouchDirections.values()).some(
+            (value) => value === activeDir
+          );
+
+          if (!stillActive) {
+            const button = buttonByDirection[activeDir];
+            if (button) {
+              deactivateDirection(activeDir, button);
+            }
+          }
+        });
+      };
+
+      window.addEventListener('touchend', handleTouchEnd);
+      window.addEventListener('touchcancel', handleTouchEnd);
+      window.addEventListener('blur', resetAllDirections);
     }
 
     function startGame() {
