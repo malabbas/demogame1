@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pizza Rush – Win 10 Large Pizzas!</title>
+  <title>Pizza Rush – AI Campaign Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg-color: #f2f2f2;
-      --screen-color: #d8e4cc;
-      --border-color: #1a1a1a;
-      --text-color: #111;
-      --accent-color: #111;
-      --panel-color: #e4ead7;
-      font-size: 14px;
+      --bg: #0f180f;
+      --panel: #d8e4cc;
+      --border: #070707;
+      --screen: #c6d7ad;
+      --text: #070707;
     }
 
     * {
@@ -26,485 +27,452 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      background: var(--bg-color);
-      color: var(--text-color);
+      padding: 2rem 1rem 3rem;
+      background: var(--bg);
+      color: var(--panel);
       font-family: 'Press Start 2P', 'VT323', monospace;
-      padding: 1.5rem;
-      gap: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    h1, h2, h3, p {
-      margin: 0;
+    h1 {
+      margin: 0 0 1.5rem;
+      text-align: center;
+      font-size: clamp(1rem, 4vw, 1.5rem);
     }
 
-    .frame {
-      border: 3px solid var(--border-color);
-      padding: 1rem;
-      background: var(--panel-color);
+    .game-shell {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1rem;
-      max-width: 540px;
-      width: 100%;
-      box-shadow: 6px 6px 0 #1115;
-    }
-
-    .logo {
-      width: 200px;
-      image-rendering: pixelated;
-      border: 3px solid var(--border-color);
-      background: #fff;
     }
 
     canvas {
-      border: 4px solid var(--border-color);
-      background: var(--screen-color);
+      width: min(90vw, 360px);
+      aspect-ratio: 10 / 9;
       image-rendering: pixelated;
-      width: min(90vw, 420px);
-      height: auto;
+      border: 12px solid var(--border);
+      background: var(--screen);
+      box-shadow: 0 0 0 8px #1a1a1a;
     }
 
-    .button {
-      border: 3px solid var(--border-color);
-      background: #fff;
+    .replay {
+      display: none;
+      border: 4px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
       padding: 0.75rem 1.5rem;
-      font-size: 1rem;
       cursor: pointer;
-      color: var(--text-color);
+      font-family: inherit;
+      font-size: 0.75rem;
+      text-transform: inherit;
+      letter-spacing: inherit;
       transition: transform 0.1s ease;
     }
 
-    .button:active {
+    .replay:active {
       transform: translateY(2px);
     }
 
-    .button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .scoreboard {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.75rem;
-      border: 3px solid var(--border-color);
-      background: var(--panel-color);
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-      width: 100%;
-      max-width: 420px;
-    }
-
-    .score-item {
-      border: 2px solid var(--border-color);
-      padding: 0.5rem 0.75rem;
-      min-width: 120px;
+    .disclaimer {
+      font-size: 0.55rem;
       text-align: center;
-      background: #f9fbe7;
-    }
-
-    #startScreen,
-    #winScreen {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    #startScreen p {
-      font-size: 0.75rem;
-    }
-
-    #winScreen {
-      display: none;
-      border: 3px solid var(--border-color);
-      padding: 1rem;
-      background: var(--panel-color);
-      max-width: 420px;
-      width: 100%;
-    }
-
-    .form-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      border: 3px solid var(--border-color);
-      padding: 1rem;
-      background: #fff;
-      max-width: 420px;
-      width: 100%;
-    }
-
-    #leadForm {
-      display: none;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      text-align: left;
-      font-size: 0.85rem;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"] {
-      border: 3px solid var(--border-color);
-      padding: 0.5rem;
-      background: #f9fbe7;
-      font-family: inherit;
-      font-size: 1rem;
-      color: var(--text-color);
-    }
-
-    .error {
-      color: #b00020;
-      font-size: 0.75rem;
-      min-height: 1.25rem;
-    }
-
-    .rules {
-      border: 3px solid var(--border-color);
-      padding: 1rem;
-      background: #fff;
-      text-align: left;
-      font-size: 0.85rem;
-    }
-
-    .rules ul {
-      margin: 0.5rem 0 0;
-      padding-left: 1.25rem;
-    }
-
-    .rules li {
-      margin-bottom: 0.5rem;
+      max-width: 24rem;
       line-height: 1.4;
-    }
-
-    .message {
-      border: 3px solid var(--border-color);
-      padding: 1rem;
-      background: var(--panel-color);
-      font-size: 0.85rem;
-      display: none;
-      max-width: 420px;
-      width: 100%;
-    }
-
-    @media (max-width: 480px) {
-      :root {
-        font-size: 12px;
-      }
-
-      .logo {
-        width: 160px;
-      }
+      text-transform: none;
+      letter-spacing: 0;
+      color: #f0f7de;
     }
   </style>
 </head>
 <body>
-  <div class="frame" id="startScreen">
-    <img class="logo" alt="Domino's Logo" id="logoImage" />
-    <h1>Pizza Rush – Win 10 Large Pizzas!</h1>
-    <p>Concept demo. Not affiliated with Domino's Pizza.</p>
-    <form id="playerForm" class="form-panel" novalidate>
-      <label>
-        First Name
-        <input type="text" id="firstNameField" name="firstName" autocomplete="given-name" required />
-      </label>
-      <label>
-        Last Name
-        <input type="text" id="lastNameField" name="lastName" autocomplete="family-name" required />
-      </label>
-      <label>
-        Email
-        <input type="email" id="emailField" name="email" autocomplete="email" required />
-      </label>
-      <label>
-        Phone Number
-        <input type="tel" id="phoneField" name="phone" autocomplete="tel" required />
-      </label>
-    </form>
-    <div class="rules" id="gameRules">
-      <h2>Game Rules</h2>
-      <ul>
-        <li>Use the arrow keys or WASD to guide the delivery driver.</li>
-        <li>Avoid moving traffic blocks—colliding sends you back to the start.</li>
-        <li>Collect 10 pizzas as fast as you can to win the grand prize.</li>
-      </ul>
-    </div>
-    <div class="error" id="startError"></div>
-    <button class="button" id="startButton" type="button" disabled>Start Game</button>
+  <h1>Pizza Rush – AI Campaign Demo</h1>
+  <div class="game-shell">
+    <canvas id="game" width="320" height="288"></canvas>
+    <button id="replay" class="replay">Play Again</button>
+    <p class="disclaimer">Concept demo. Not affiliated with Domino’s Pizza.</p>
   </div>
-
-  <canvas id="gameCanvas" width="320" height="240"></canvas>
-
-  <div class="scoreboard" id="scoreboard" style="display:none;">
-    <div class="score-item" id="pizzaCount">Pizzas: 0/10</div>
-    <div class="score-item" id="timer">Time: 00:00</div>
-    <div class="score-item" id="mistakes">Mistakes: 0</div>
-  </div>
-
-  <div id="winScreen">
-    <h2>You Won 10 Large Pizzas!</h2>
-    <p>Enter your info to claim (demo only).</p>
-  </div>
-
-  <form id="leadForm" class="form-panel">
-    <label>
-      Name
-      <input type="text" id="nameField" required />
-    </label>
-    <label>
-      Email
-      <input type="email" id="leadEmailField" required />
-    </label>
-    <button class="button" type="submit">Submit</button>
-  </form>
-
-  <div class="message" id="thankYou">Thanks! In a real campaign, this would send your entry to the brand.</div>
-
   <script>
-    // Inline assets encoded as base64 to keep the demo fully offline
-    const logoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAA8CAYAAACtrX6oAAABY0lEQVR4nO3ZsRGDMBBEUYogduwiHLtiF+EiKIIO7CFxxIwFLLq75Qef9CS9USKGcRw/5NuwfOZ5JsMANg9g81aBp2miwgFsHsDmAWzeZuD3/WHV7fmyCmCAAa4cwAADXLlSwMt8gI2AW57bAC4KvOVNFeBiwHsezgEuArwHV4kcDWINfARXhRwNAjDAAGcHXtYJsBFwy7rtgRW4CuTesGdDpwF2u8FH9gBwcmDFPgAGGOAIYMUelMipgI8iK+YDzFs0wL2RlXMB5n9wF1wVclpgbrDxDd5zGAAXAT5yIAAnB1YcCsAAnwqsQlasA2CAAY5AVq0hFbACV4GsPNxo3FTAbjd4K/QZcwHuBLwG3mMOwEHAPQMYYF6yKpcOeC+yanY0yCWAtyIr50aDXAa4FVk9MxrkUsBr4GfPiAa5NHCPokEABhhggAEGuBWYagWweQCbB7B5f4HJJ4DNA9i8HzD59gXjoa7IueOyqwAAAABJRU5ErkJggg==';
-    const pizzaData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA+UlEQVR4nM2Wyw2DQAxEKWIroRwqSSUpIuVwznnPdJBoIyGhaMeeWTuQgw+Iz3v+rPBUa52ujEvhKQLrY3mdJtBgbKQKWKDteQuJyPAG9EKRoOEM2BKRBaJwViIdfp9nSSIdvgcrAQWYzBDck4ACKHvro8pzvSq42XuZeddeFejyIzhTmbAAytTrearASM8lgdGjV0r5hHJqjhKhCiAR5SgOCVjZNQlrNsICTN/3aqRXQJn8dq83H5QAK6HMxxEOBZQ2jA4p/TOK7gGo903ip/uABaf2gb/YiLIkQjthT+L0rRhJfAtZ971vUwKMiAoeEkBSkffDAtF4Ay/wccUfh3ALAAAAAElFTkSuQmCC';
-
-    const startScreen = document.getElementById('startScreen');
-    const startButton = document.getElementById('startButton');
-    const playerForm = document.getElementById('playerForm');
-    const startError = document.getElementById('startError');
-    const canvas = document.getElementById('gameCanvas');
+    const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
+    const replayButton = document.getElementById('replay');
 
-    const scoreboard = document.getElementById('scoreboard');
-    const pizzaCountEl = document.getElementById('pizzaCount');
-    const timerEl = document.getElementById('timer');
-    const mistakesEl = document.getElementById('mistakes');
-    const winScreen = document.getElementById('winScreen');
-    const leadForm = document.getElementById('leadForm');
-    const thankYou = document.getElementById('thankYou');
+    // Tunable game values
+    const PIZZAS_TO_WIN = 10; // Number of pizzas required to win
+    const MAX_MISTAKES = 5; // Maximum mistakes before forced restart
+    const OBSTACLE_COUNT = 8; // Number of moving car obstacles
 
-    const startInputs = playerForm.querySelectorAll('input');
-
-    document.getElementById('logoImage').src = logoData;
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.src = 'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Imagaes/Dominos_pizza_logo.svg.png';
 
     const pizzaImg = new Image();
-    pizzaImg.src = pizzaData;
+    pizzaImg.crossOrigin = 'anonymous';
+    pizzaImg.src = 'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Imagaes/1f355.png';
 
-    // Game configuration (edit these values to tweak gameplay)
-    const PIZZAS_TO_WIN = 10;
-    const PLAYER_SPEED = 90; // pixels per second
-    const OBSTACLE_SPEED = 40;
+    let assetsLoaded = 0;
+    [logoImg, pizzaImg].forEach((img) => {
+      if (img.complete) {
+        assetsLoaded += 1;
+      } else {
+        img.addEventListener('load', () => {
+          assetsLoaded += 1;
+        });
+      }
+    });
 
-    // Game state objects
-    let player;
-    let pizzas;
-    let obstacles;
+    const keyState = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+    };
+
+    const player = {
+      x: 0,
+      y: 0,
+      width: 14,
+      height: 18,
+      speed: 1.4,
+      startX: 0,
+      startY: 0,
+    };
+
+    let pizzas = [];
+    let obstacles = [];
     let collected = 0;
     let mistakes = 0;
+    let flashTimer = 0;
+    let shakeTimer = 0;
+    let restartTimer = 0;
     let lastTime = 0;
-    let startTime = 0;
-    let isRunning = false;
-    let keys = {};
+    let gameState = 'start'; // start, playing, won, restarting
 
     function initGame() {
-      resetGame();
-      window.addEventListener('keydown', (e) => {
-        keys[e.code] = true;
-      });
-      window.addEventListener('keyup', (e) => {
-        keys[e.code] = false;
-      });
-      playerForm.addEventListener('submit', (event) => event.preventDefault());
-      startInputs.forEach((input) => {
-        input.addEventListener('input', validateStartForm);
-        input.addEventListener('blur', validateStartForm);
-      });
-      validateStartForm();
-    }
+      player.startX = canvas.width / 2 - player.width / 2;
+      player.startY = canvas.height - 40;
+      player.x = player.startX;
+      player.y = player.startY;
 
-    function startGame() {
-      resetGame();
-      startScreen.style.display = 'none';
-      winScreen.style.display = 'none';
-      leadForm.style.display = 'none';
-      thankYou.style.display = 'none';
-      scoreboard.style.display = 'flex';
-      isRunning = true;
-      startTime = performance.now();
-      lastTime = performance.now();
+      window.addEventListener('keydown', (event) => {
+        switch (event.key.toLowerCase()) {
+          case 'arrowup':
+          case 'w':
+            keyState.up = true;
+            break;
+          case 'arrowdown':
+          case 's':
+            keyState.down = true;
+            break;
+          case 'arrowleft':
+          case 'a':
+            keyState.left = true;
+            break;
+          case 'arrowright':
+          case 'd':
+            keyState.right = true;
+            break;
+          case 'enter':
+          case ' ':
+            if (gameState === 'start') {
+              startGame();
+            } else if (gameState === 'won') {
+              startGame();
+            }
+            break;
+        }
+      });
+
+      window.addEventListener('keyup', (event) => {
+        switch (event.key.toLowerCase()) {
+          case 'arrowup':
+          case 'w':
+            keyState.up = false;
+            break;
+          case 'arrowdown':
+          case 's':
+            keyState.down = false;
+            break;
+          case 'arrowleft':
+          case 'a':
+            keyState.left = false;
+            break;
+          case 'arrowright':
+          case 'd':
+            keyState.right = false;
+            break;
+        }
+      });
+
+      canvas.addEventListener('click', () => {
+        if (gameState === 'start') {
+          startGame();
+        }
+      });
+
+      replayButton.addEventListener('click', () => {
+        if (gameState === 'won') {
+          startGame();
+        }
+      });
+
       requestAnimationFrame(gameLoop);
     }
 
-    function validateStartForm() {
-      const isValid = playerForm.checkValidity();
-      startButton.disabled = !isValid;
-      if (isValid) {
-        startError.textContent = '';
-      }
-      return isValid;
+    function startGame() {
+      resetGameState();
+      gameState = 'playing';
+      replayButton.style.display = 'none';
+      restartTimer = 0;
     }
 
-    function handleStartClick() {
-      if (!validateStartForm()) {
-        startError.textContent = 'Please complete all fields before starting the game.';
-        playerForm.reportValidity();
-        return;
-      }
-      startGame();
-    }
-
-    function resetGame() {
-      player = {
-        x: canvas.width / 2 - 5,
-        y: canvas.height - 30,
-        width: 10,
-        height: 10,
-        speed: PLAYER_SPEED,
-        startX: canvas.width / 2 - 5,
-        startY: canvas.height - 30
-      };
-      pizzas = [];
-      obstacles = createObstacles();
+    function resetGameState() {
       collected = 0;
       mistakes = 0;
-      updateScoreboard();
+      pizzas = [];
+      obstacles = [];
+      flashTimer = 0;
+      shakeTimer = 0;
+      player.x = player.startX;
+      player.y = player.startY;
       spawnPizza();
-      draw();
-    }
-
-    function createObstacles() {
-      // Edit obstacle data here for different challenge layouts
-      return [
-        { x: 20, y: 80, width: 80, height: 12, minX: 20, maxX: 220, speed: OBSTACLE_SPEED },
-        { x: 200, y: 140, width: 90, height: 12, minX: 40, maxX: 260, speed: -OBSTACLE_SPEED * 0.8 },
-        { x: 40, y: 40, width: 60, height: 10, minX: 40, maxX: 240, speed: OBSTACLE_SPEED * 1.2 }
-      ];
+      createObstacles();
     }
 
     function spawnPizza() {
-      const margin = 20;
-      const size = 16;
-      const x = Math.random() * (canvas.width - margin * 2 - size) + margin;
-      const y = Math.random() * (canvas.height - margin * 2 - size) + margin;
-      pizzas.push({ x, y, size });
+      const safeRadius = 32;
+      let attempts = 0;
+      let positionValid = false;
+      let x = 0;
+      let y = 0;
+
+      while (!positionValid && attempts < 200) {
+        attempts += 1;
+        x = Math.floor(Math.random() * (canvas.width - 24)) + 12;
+        y = Math.floor(Math.random() * (canvas.height - 60)) + 24;
+        positionValid = true;
+
+        if (
+          Math.hypot(player.x + player.width / 2 - x, player.y + player.height / 2 - y) < safeRadius
+        ) {
+          positionValid = false;
+        }
+
+        obstacles.forEach((ob) => {
+          if (
+            x + 20 > ob.x - safeRadius &&
+            x < ob.x + ob.width + safeRadius &&
+            y + 20 > ob.y - safeRadius &&
+            y < ob.y + ob.height + safeRadius
+          ) {
+            positionValid = false;
+          }
+        });
+      }
+
+      pizzas = [
+        {
+          x,
+          y,
+          size: 20,
+        },
+      ];
     }
 
-    function update(timestamp) {
-      const delta = (timestamp - lastTime) / 1000;
-      lastTime = timestamp;
+    function createObstacles() {
+      for (let i = 0; i < OBSTACLE_COUNT; i += 1) {
+        const horizontal = i % 2 === 0;
+        const speedBase = 0.6 + Math.random() * 1.2 + i * 0.05;
+        const obstacle = horizontal
+          ? {
+              x: Math.random() * canvas.width,
+              y: 40 + i * 24,
+              width: 36,
+              height: 10,
+              dx: speedBase * (Math.random() > 0.5 ? 1 : -1),
+              dy: 0,
+            }
+          : {
+              x: 20 + (i % 3) * 80,
+              y: Math.random() * canvas.height,
+              width: 12,
+              height: 38,
+              dx: 0,
+              dy: speedBase * (Math.random() > 0.5 ? 1 : -1),
+            };
+        obstacles.push(obstacle);
+      }
+    }
+
+    function update(delta) {
+      if (gameState === 'start') {
+        return;
+      }
+
+      if (gameState === 'restarting') {
+        restartTimer -= delta;
+        if (restartTimer <= 0) {
+          startGame();
+        }
+        return;
+      }
+
+      if (gameState === 'won') {
+        return;
+      }
 
       handleInput(delta);
       moveObstacles(delta);
-      checkPizzaCollision();
+      checkPizzaCollection();
       checkObstacleCollision();
-      updateScoreboard(timestamp);
 
-      if (collected >= PIZZAS_TO_WIN) {
-        endGame();
+      if (flashTimer > 0) {
+        flashTimer -= delta;
+      }
+      if (shakeTimer > 0) {
+        shakeTimer -= delta;
       }
     }
 
     function handleInput(delta) {
+      const moveSpeed = player.speed * delta * 0.12;
       let dx = 0;
       let dy = 0;
-      if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
-      if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
-      if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
-      if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
+      if (keyState.left) dx -= moveSpeed;
+      if (keyState.right) dx += moveSpeed;
+      if (keyState.up) dy -= moveSpeed;
+      if (keyState.down) dy += moveSpeed;
 
-      if (dx !== 0 && dy !== 0) {
-        const inv = 1 / Math.sqrt(2);
-        dx *= inv;
-        dy *= inv;
+      if (dx && dy) {
+        dx *= Math.SQRT1_2;
+        dy *= Math.SQRT1_2;
       }
 
-      player.x += dx * player.speed * delta;
-      player.y += dy * player.speed * delta;
+      player.x += dx;
+      player.y += dy;
 
-      player.x = Math.max(4, Math.min(canvas.width - player.width - 4, player.x));
-      player.y = Math.max(4, Math.min(canvas.height - player.height - 4, player.y));
+      player.x = Math.max(8, Math.min(canvas.width - player.width - 8, player.x));
+      player.y = Math.max(32, Math.min(canvas.height - player.height - 8, player.y));
     }
 
     function moveObstacles(delta) {
-      obstacles.forEach((obstacle) => {
-        obstacle.x += obstacle.speed * delta;
-        if (obstacle.x <= obstacle.minX || obstacle.x + obstacle.width >= obstacle.maxX) {
-          obstacle.speed *= -1;
-          obstacle.x = Math.max(obstacle.minX, Math.min(obstacle.maxX - obstacle.width, obstacle.x));
-        }
-      });
-    }
+      const speedBoost = 1 + collected * 0.05;
+      obstacles.forEach((ob) => {
+        ob.x += ob.dx * delta * 0.1 * speedBoost;
+        ob.y += ob.dy * delta * 0.1 * speedBoost;
 
-    function checkPizzaCollision() {
-      pizzas = pizzas.filter((pizza) => {
-        const collectedPizza =
-          player.x < pizza.x + pizza.size &&
-          player.x + player.width > pizza.x &&
-          player.y < pizza.y + pizza.size &&
-          player.y + player.height > pizza.y;
-        if (collectedPizza) {
-          collected += 1;
-          if (collected < PIZZAS_TO_WIN) {
-            spawnPizza();
+        if (ob.dx !== 0) {
+          if (ob.x > canvas.width + ob.width) {
+            ob.x = -ob.width;
           }
-          return false;
+          if (ob.x < -ob.width) {
+            ob.x = canvas.width + ob.width;
+          }
         }
-        return true;
+
+        if (ob.dy !== 0) {
+          if (ob.y > canvas.height + ob.height) {
+            ob.y = -ob.height;
+          }
+          if (ob.y < -ob.height) {
+            ob.y = canvas.height + ob.height;
+          }
+        }
       });
     }
 
-    function checkObstacleCollision() {
-      const hit = obstacles.some((obstacle) => {
-        return (
-          player.x < obstacle.x + obstacle.width &&
-          player.x + player.width > obstacle.x &&
-          player.y < obstacle.y + obstacle.height &&
-          player.y + player.height > obstacle.y
-        );
-      });
-      if (hit) {
-        mistakes += 1;
-        player.x = player.startX;
-        player.y = player.startY;
+    function checkPizzaCollection() {
+      const pizza = pizzas[0];
+      if (!pizza) return;
+
+      const collectedPizza =
+        player.x < pizza.x + pizza.size &&
+        player.x + player.width > pizza.x &&
+        player.y < pizza.y + pizza.size &&
+        player.y + player.height > pizza.y;
+
+      if (collectedPizza) {
+        collected += 1;
+        spawnPizza();
+        if (collected >= PIZZAS_TO_WIN) {
+          gameState = 'won';
+          replayButton.style.display = 'inline-block';
+        }
       }
     }
 
-    function updateScoreboard(timestamp) {
-      pizzaCountEl.textContent = `Pizzas: ${collected}/${PIZZAS_TO_WIN}`;
-      mistakesEl.textContent = `Mistakes: ${mistakes}`;
-      const elapsed = timestamp ? Math.max(0, timestamp - startTime) : 0;
-      const seconds = Math.floor(elapsed / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const remainder = seconds % 60;
-      timerEl.textContent = `Time: ${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+    function checkObstacleCollision() {
+      const hit = obstacles.some((ob) =>
+        player.x < ob.x + ob.width &&
+        player.x + player.width > ob.x &&
+        player.y < ob.y + ob.height &&
+        player.y + player.height > ob.y
+      );
+
+      if (hit) {
+        mistakes += 1;
+        flashTimer = 120;
+        shakeTimer = 180;
+        player.x = player.startX;
+        player.y = player.startY;
+
+        if (mistakes >= MAX_MISTAKES) {
+          restartTimer = 900; // ~0.9 seconds
+          gameState = 'restarting';
+          resetGameState();
+        }
+      }
     }
 
-    function draw() {
-      ctx.fillStyle = '#d8e4cc';
+    function draw(timestamp) {
+      const shakeIntensity = shakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+      ctx.save();
+      if (shakeTimer > 0) {
+        ctx.translate(shakeIntensity, shakeIntensity);
+      }
+
+      ctx.fillStyle = '#c6d7ad';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       drawGrid();
-      drawPizzas();
-      drawObstacles();
-      drawPlayer();
+
+      if (gameState === 'start') {
+        drawStartScreen();
+      } else {
+        drawPizzas();
+        drawObstacles();
+        drawPlayer();
+        drawHud();
+
+        if (flashTimer > 0) {
+          const alpha = Math.min(0.35, flashTimer / 300);
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        if (gameState === 'won') {
+          drawWinOverlay();
+        }
+
+        if (gameState === 'restarting') {
+          drawRestartOverlay();
+        }
+      }
+
+      ctx.restore();
     }
 
     function drawGrid() {
-      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.strokeStyle = 'rgba(7, 7, 7, 0.08)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 16) {
+      for (let x = 0; x <= canvas.width; x += 16) {
         ctx.beginPath();
         ctx.moveTo(x + 0.5, 0);
         ctx.lineTo(x + 0.5, canvas.height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += 16) {
+      for (let y = 0; y <= canvas.height; y += 16) {
         ctx.beginPath();
         ctx.moveTo(0, y + 0.5);
         ctx.lineTo(canvas.width, y + 0.5);
@@ -512,59 +480,123 @@
       }
     }
 
-    function drawPlayer() {
-      ctx.fillStyle = '#111';
-      ctx.fillRect(Math.round(player.x), Math.round(player.y), player.width, player.height);
-      ctx.fillStyle = '#fefefe';
+    function drawStartScreen() {
+      ctx.fillStyle = '#1e2a1e';
+      ctx.fillRect(24, 32, canvas.width - 48, canvas.height - 96);
+      ctx.strokeStyle = '#070707';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(24, 32, canvas.width - 48, canvas.height - 96);
+
+      if (assetsLoaded >= 2) {
+        const logoWidth = 120;
+        const logoHeight = 60;
+        ctx.drawImage(
+          logoImg,
+          canvas.width / 2 - logoWidth / 2,
+          52,
+          logoWidth,
+          logoHeight
+        );
+      }
+
+      ctx.fillStyle = '#f6ffe1';
+      ctx.font = '10px "Press Start 2P", "VT323", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Concept demo. Not affiliated with Domino\'s Pizza.', canvas.width / 2, 120);
+      ctx.fillText('Collect 10 pizzas.', canvas.width / 2, 140);
+      ctx.fillText('Avoid the traffic.', canvas.width / 2, 156);
+      ctx.fillText('Press Enter or Click to Start', canvas.width / 2, 192);
+    }
+
+    function drawHud() {
+      ctx.fillStyle = '#1e2a1e';
+      ctx.fillRect(0, 0, canvas.width, 28);
+      ctx.strokeStyle = '#070707';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, canvas.width, 28);
+
+      if (assetsLoaded >= 2) {
+        ctx.drawImage(logoImg, 6, 4, 40, 20);
+      }
+
+      ctx.fillStyle = '#f6ffe1';
       ctx.font = '8px "Press Start 2P", "VT323", monospace';
       ctx.textBaseline = 'top';
-      ctx.fillText('D', Math.round(player.x) + 1, Math.round(player.y));
+      ctx.textAlign = 'left';
+      ctx.fillText(`Pizzas: ${collected}/${PIZZAS_TO_WIN}`, 54, 6);
+      ctx.fillText(`Mistakes: ${mistakes}/${MAX_MISTAKES}`, 190, 6);
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = '#070707';
+      ctx.fillRect(Math.round(player.x), Math.round(player.y), player.width, player.height);
+      ctx.fillStyle = '#f6ffe1';
+      ctx.font = '8px "Press Start 2P", "VT323", monospace';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.fillText('D', Math.round(player.x + player.width / 2), Math.round(player.y + 4));
     }
 
     function drawPizzas() {
       pizzas.forEach((pizza) => {
-        ctx.drawImage(
-          pizzaImg,
-          Math.round(pizza.x),
-          Math.round(pizza.y),
-          pizza.size,
-          pizza.size
-        );
+        if (assetsLoaded >= 2) {
+          ctx.drawImage(pizzaImg, Math.round(pizza.x), Math.round(pizza.y), pizza.size, pizza.size);
+        } else {
+          ctx.fillStyle = '#f6ffe1';
+          ctx.fillRect(Math.round(pizza.x), Math.round(pizza.y), pizza.size, pizza.size);
+        }
       });
     }
 
     function drawObstacles() {
-      ctx.fillStyle = '#111';
-      obstacles.forEach((obstacle) => {
-        ctx.fillRect(Math.round(obstacle.x), Math.round(obstacle.y), obstacle.width, obstacle.height);
+      ctx.fillStyle = '#070707';
+      obstacles.forEach((ob) => {
+        ctx.fillRect(Math.round(ob.x), Math.round(ob.y), ob.width, ob.height);
       });
     }
 
-    function endGame() {
-      isRunning = false;
-      winScreen.style.display = 'flex';
-      leadForm.style.display = 'flex';
+    function drawWinOverlay() {
+      ctx.fillStyle = 'rgba(30, 42, 30, 0.92)';
+      ctx.fillRect(32, 64, canvas.width - 64, canvas.height - 128);
+      ctx.strokeStyle = '#f6ffe1';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(32, 64, canvas.width - 64, canvas.height - 128);
+
+      ctx.fillStyle = '#f6ffe1';
+      ctx.font = '10px "Press Start 2P", "VT323", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('You Won 10 Large Pizzas!', canvas.width / 2, 120);
+      ctx.fillText('(Demo only – no real prize.)', canvas.width / 2, 140);
+      ctx.fillText('Press Enter or Play Again', canvas.width / 2, 172);
+    }
+
+    function drawRestartOverlay() {
+      ctx.fillStyle = 'rgba(30, 42, 30, 0.85)';
+      ctx.fillRect(36, 100, canvas.width - 72, 64);
+      ctx.strokeStyle = '#f6ffe1';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(36, 100, canvas.width - 72, 64);
+
+      ctx.fillStyle = '#f6ffe1';
+      ctx.font = '9px "Press Start 2P", "VT323", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Too many crashes! Restarting…', canvas.width / 2, 132);
     }
 
     function gameLoop(timestamp) {
-      if (!isRunning) {
-        draw();
-        return;
-      }
-      update(timestamp);
-      draw();
+      const delta = timestamp - lastTime || 16;
+      lastTime = timestamp;
+
+      update(delta);
+      draw(timestamp);
+
       requestAnimationFrame(gameLoop);
     }
 
-    leadForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      thankYou.style.display = 'block';
-    });
-
-    startButton.addEventListener('click', handleStartClick);
-
     initGame();
-    draw();
   </script>
 </body>
 </html>
