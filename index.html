@@ -42,9 +42,17 @@
     }
 
     h1 {
-      margin: 0 0 1.5rem;
+      margin: 0;
       text-align: center;
-      font-size: clamp(1rem, 4vw, 1.5rem);
+      font-size: clamp(0.85rem, 3.4vw, 1.275rem);
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
     }
 
     .game-shell {
@@ -55,11 +63,11 @@
     }
 
     canvas {
-      width: min(92vw, 414px);
+      width: min(92vw, 472px);
       aspect-ratio: 10 / 9;
       image-rendering: pixelated;
-      border: 12px solid var(--border);
-      background: var(--screen);
+      border: 2px solid #000;
+      background: #2d2d1f;
       box-shadow: 0 0 0 8px #1a1a1a;
     }
 
@@ -138,13 +146,13 @@
     }
 
     .disclaimer {
-      font-size: clamp(0.4rem, 1.6vw, 0.75rem);
+      font-size: clamp(0.28rem, 1.2vw, 0.45rem);
       text-align: center;
       color: #dcdcdc;
       opacity: 0.7;
       text-transform: none;
-      letter-spacing: 0.05em;
-      margin: 0.5rem 0 1.5rem;
+      letter-spacing: 1px;
+      margin: 0.4rem 0 0;
     }
 
     @media (max-width: 540px) {
@@ -156,8 +164,10 @@
   </style>
 </head>
 <body>
-  <h1>Pizza Rush – AI Campaign Demo</h1>
-  <p class="disclaimer" role="note">Concept demo. Not affiliated with Domino’s Pizza.</p>
+  <div class="title-block">
+    <h1>Pizza Rush – AI Campaign Demo</h1>
+    <p class="disclaimer" role="note">Concept demo. Not affiliated with Domino’s Pizza.</p>
+  </div>
   <div class="game-shell">
     <canvas id="game" width="320" height="288"></canvas>
     <button id="replay" class="replay">Play Again</button>
@@ -735,32 +745,30 @@
       ctx.textBaseline = 'top';
       ctx.fillText('Collect 10 pizzas.', canvas.width / 2, 138);
       ctx.fillText('Avoid the traffic.', canvas.width / 2, 154);
-      ctx.fillText('Press Enter or Click to Start', canvas.width / 2, 190);
-
-      drawStartDisclaimer();
+      drawStartPrompt('Press Enter or Click to Start');
     }
 
-    function drawStartDisclaimer() {
-      const panelWidth = canvas.width - 96;
-      const panelHeight = 46;
-      const panelX = (canvas.width - panelWidth) / 2;
-      const panelY = canvas.height - panelHeight - 58;
-
+    function drawStartPrompt(message) {
       ctx.save();
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-      ctx.strokeStyle = 'rgba(246, 255, 225, 0.9)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(panelX + 0.5, panelY + 0.5, panelWidth - 1, panelHeight - 1);
-
-      ctx.font = '7px "Press Start 2P", "VT323", monospace';
+      ctx.font = 'bold 16px "Press Start 2P", "VT323", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
-      ctx.lineWidth = 2;
-      ctx.strokeText(DISCLAIMER_TEXT, canvas.width / 2, panelY + panelHeight / 2);
-      ctx.fillStyle = '#f6ffe1';
-      ctx.fillText(DISCLAIMER_TEXT, canvas.width / 2, panelY + panelHeight / 2);
+
+      const metrics = ctx.measureText(message);
+      const paddingX = 8;
+      const paddingY = 4;
+      const textHeight =
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent || 16;
+      const boxWidth = metrics.width + paddingX * 2;
+      const boxHeight = textHeight + paddingY * 2;
+      const boxX = (canvas.width - boxWidth) / 2;
+      const boxY = canvas.height - boxHeight - 24;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+      ctx.fillStyle = '#fff';
+      ctx.fillText(message, canvas.width / 2, boxY + boxHeight / 2);
       ctx.restore();
     }
 
