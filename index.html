@@ -187,6 +187,63 @@
     const DISCLAIMER_TEXT = "Concept demo. Not affiliated with Domino's Pizza.";
     document.querySelector('.disclaimer').textContent = DISCLAIMER_TEXT;
 
+    function createAudio(src, { loop = false, volume = 0.6 } = {}) {
+      const audio = new Audio(src);
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+      audio.loop = loop;
+      audio.volume = volume;
+      audio.load();
+      return audio;
+    }
+
+    function playAudioInstance(audio) {
+      if (!audio) return;
+      audio.currentTime = 0;
+      const promise = audio.play();
+      if (promise && typeof promise.catch === 'function') {
+        promise.catch(() => {});
+      }
+    }
+
+    function stopAudioInstance(audio) {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    const backgroundMusic = createAudio(
+      'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Sounds/background%20sound.mp3',
+      { loop: true, volume: 0.35 }
+    );
+    const gameOverSound = createAudio(
+      'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Sounds/Play%20when%20lost.mp3',
+      { volume: 0.55 }
+    );
+    const pizzaCollectedSound = createAudio(
+      'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Sounds/Play%20when%20pizza%20catched.mp3',
+      { volume: 0.6 }
+    );
+    const trafficHitSound = createAudio(
+      'https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Sounds/When%20you%20get%20hit%20by%20traffic.mp3',
+      { volume: 0.55 }
+    );
+
+    function playBackgroundMusic() {
+      if (!backgroundMusic.paused) {
+        return;
+      }
+      const promise = backgroundMusic.play();
+      if (promise && typeof promise.catch === 'function') {
+        promise.catch(() => {});
+      }
+    }
+
+    function stopBackgroundMusic() {
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+    }
+
     // Tunable game values
     const PIZZAS_TO_WIN = 10; // Number of pizzas required to win
     const MAX_MISTAKES = 5; // Maximum mistakes before forced restart
@@ -462,10 +519,14 @@
     }
 
     function startGame() {
+      stopAudioInstance(gameOverSound);
+      stopAudioInstance(trafficHitSound);
+      stopAudioInstance(pizzaCollectedSound);
       resetGameState();
       gameState = 'playing';
       replayButton.style.display = 'none';
       restartTimer = 0;
+      playBackgroundMusic();
     }
 
     function resetGameState() {
@@ -475,6 +536,7 @@
       obstacles = [];
       flashTimer = 0;
       shakeTimer = 0;
+      stopAudioInstance(pizzaCollectedSound);
       player.x = player.startX;
       player.y = player.startY;
       spawnPizza();
@@ -635,9 +697,11 @@
 
       if (collectedPizza) {
         collected += 1;
+        playAudioInstance(pizzaCollectedSound);
         spawnPizza();
         if (collected >= PIZZAS_TO_WIN) {
           gameState = 'won';
+          stopBackgroundMusic();
           replayButton.style.display = 'inline-block';
         }
       }
@@ -653,6 +717,8 @@
 
       if (hit) {
         mistakes += 1;
+        stopAudioInstance(pizzaCollectedSound);
+        playAudioInstance(trafficHitSound);
         flashTimer = 120;
         shakeTimer = 180;
         player.x = player.startX;
@@ -661,6 +727,8 @@
         if (mistakes >= MAX_MISTAKES) {
           restartTimer = 900; // ~0.9 seconds
           gameState = 'restarting';
+          stopBackgroundMusic();
+          playAudioInstance(gameOverSound);
           resetGameState();
         }
       }
