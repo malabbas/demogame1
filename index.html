@@ -44,7 +44,8 @@
     h1 {
       margin: 0;
       text-align: center;
-      font-size: clamp(0.85rem, 3.4vw, 1.275rem);
+      font-size: clamp(0.72rem, 2.9vw, 1.08rem);
+      color: #dcdcdc;
     }
 
     .title-block {
@@ -92,27 +93,27 @@
     .dpad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, clamp(48px, 18vw, 64px));
+      grid-template-rows: repeat(3, clamp(40px, 15vw, 54px));
       grid-template-areas:
         '. up .'
         'left . right'
         '. down .';
-      width: min(92vw, 414px);
-      gap: 0.65rem;
+      width: min(88vw, 352px);
+      gap: 0.55rem;
       margin-top: 0.5rem;
       touch-action: none;
     }
 
     .dpad-button {
-      border: 4px solid var(--border);
-      background: var(--panel);
+      border: 2px solid #000;
+      background: #cfd2b2;
       color: var(--text);
       font-family: inherit;
       font-size: 1.1rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 -4px 0 rgba(7, 7, 7, 0.35);
+      box-shadow: inset 0 -3px 0 rgba(7, 7, 7, 0.35);
       cursor: pointer;
       user-select: none;
       transition: transform 0.1s ease, box-shadow 0.1s ease;
@@ -126,7 +127,7 @@
     .dpad-button:active,
     .dpad-button.pressed {
       transform: translateY(2px);
-      box-shadow: inset 0 4px 0 rgba(7, 7, 7, 0.35);
+      box-shadow: inset 0 3px 0 rgba(7, 7, 7, 0.35);
     }
 
     .dpad-button.up {
@@ -750,7 +751,7 @@
 
     function drawStartPrompt(message) {
       ctx.save();
-      ctx.font = 'bold 16px "Press Start 2P", "VT323", monospace';
+      ctx.font = 'bold 8px "Press Start 2P", "VT323", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -766,6 +767,9 @@
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+      ctx.fillStyle = '#000';
+      ctx.fillText(message, canvas.width / 2, boxY + boxHeight / 2 + 1);
 
       ctx.fillStyle = '#fff';
       ctx.fillText(message, canvas.width / 2, boxY + boxHeight / 2);
