@@ -7,6 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link
+    rel="icon"
+    type="image/png"
+    href="https://ctovmhwxjuehichrydrl.supabase.co/storage/v1/object/public/Imagaes/android-chrome-512x512.png"
+    sizes="512x512"
+  />
   <style>
     :root {
       --bg: #0f180f;
@@ -49,7 +55,7 @@
     }
 
     canvas {
-      width: min(90vw, 360px);
+      width: min(92vw, 414px);
       aspect-ratio: 10 / 9;
       image-rendering: pixelated;
       border: 12px solid var(--border);
@@ -83,7 +89,7 @@
         '. up .'
         'left . right'
         '. down .';
-      width: min(90vw, 360px);
+      width: min(92vw, 414px);
       gap: 0.65rem;
       margin-top: 0.5rem;
       touch-action: none;
@@ -132,13 +138,26 @@
     }
 
     .disclaimer {
-      font-size: 0.55rem;
+      font-size: clamp(0.85rem, 2.6vw, 1.1rem);
       text-align: center;
-      max-width: 24rem;
+      max-width: min(92vw, 26rem);
       line-height: 1.4;
       text-transform: none;
       letter-spacing: 0;
-      color: #f0f7de;
+      color: #ffffff;
+      text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      margin: 0.5rem 0 0;
+    }
+
+    @media (max-width: 540px) {
+      canvas,
+      .dpad {
+        width: min(92vw, 360px);
+      }
     }
   </style>
 </head>
@@ -153,13 +172,15 @@
       <button class="dpad-button right" data-direction="right" aria-label="Move right">▶</button>
       <button class="dpad-button down" data-direction="down" aria-label="Move down">▼</button>
     </div>
-    <p class="disclaimer">Concept demo. Not affiliated with Domino’s Pizza.</p>
+    <p class="disclaimer" role="note">Concept demo. Not affiliated with Domino’s Pizza.</p>
   </div>
   <script>
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const replayButton = document.getElementById('replay');
     const dpadButtons = document.querySelectorAll('.dpad-button');
+    const DISCLAIMER_TEXT = "Concept demo. Not affiliated with Domino's Pizza.";
+    document.querySelector('.disclaimer').textContent = DISCLAIMER_TEXT;
 
     // Tunable game values
     const PIZZAS_TO_WIN = 10; // Number of pizzas required to win
@@ -205,6 +226,48 @@
       left: false,
       right: false,
     };
+
+    const PLAYER_PALETTE = {
+      S: '#e0c39a',
+      T: '#2b7ce9',
+      P: '#333333',
+    };
+
+    const PLAYER_SPRITE = [
+      '...SSS....',
+      '..SSSSS...',
+      '..SSSSS...',
+      '..SSSSS...',
+      '...SSS....',
+      '....S.....',
+      '..TTTTT...',
+      '..TTTTT...',
+      '..TTTTT...',
+      '..TTTTT...',
+      '..PPPPP...',
+      '..PPPPP...',
+      '.PP...PP..',
+      '.PP...PP..',
+    ];
+
+    const playerSpriteCanvas = document.createElement('canvas');
+    const playerSpriteWidth = PLAYER_SPRITE[0].length;
+    const playerSpriteHeight = PLAYER_SPRITE.length;
+    playerSpriteCanvas.width = playerSpriteWidth;
+    playerSpriteCanvas.height = playerSpriteHeight;
+    const playerSpriteCtx = playerSpriteCanvas.getContext('2d');
+
+    PLAYER_SPRITE.forEach((row, y) => {
+      for (let x = 0; x < row.length; x += 1) {
+        const color = PLAYER_PALETTE[row[x]];
+        if (!color) {
+          continue;
+        }
+
+        playerSpriteCtx.fillStyle = color;
+        playerSpriteCtx.fillRect(x, y, 1, 1);
+      }
+    });
 
     const player = {
       x: 0,
@@ -676,10 +739,35 @@
       ctx.font = '10px "Press Start 2P", "VT323", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.fillText('Concept demo. Not affiliated with Domino\'s Pizza.', canvas.width / 2, 120);
-      ctx.fillText('Collect 10 pizzas.', canvas.width / 2, 140);
-      ctx.fillText('Avoid the traffic.', canvas.width / 2, 156);
-      ctx.fillText('Press Enter or Click to Start', canvas.width / 2, 192);
+      ctx.fillText('Collect 10 pizzas.', canvas.width / 2, 138);
+      ctx.fillText('Avoid the traffic.', canvas.width / 2, 154);
+      ctx.fillText('Press Enter or Click to Start', canvas.width / 2, 190);
+
+      drawStartDisclaimer();
+    }
+
+    function drawStartDisclaimer() {
+      const panelWidth = canvas.width - 96;
+      const panelHeight = 46;
+      const panelX = (canvas.width - panelWidth) / 2;
+      const panelY = canvas.height - panelHeight - 58;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+      ctx.strokeStyle = 'rgba(246, 255, 225, 0.9)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(panelX + 0.5, panelY + 0.5, panelWidth - 1, panelHeight - 1);
+
+      ctx.font = '7px "Press Start 2P", "VT323", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.lineWidth = 2;
+      ctx.strokeText(DISCLAIMER_TEXT, canvas.width / 2, panelY + panelHeight / 2);
+      ctx.fillStyle = '#f6ffe1';
+      ctx.fillText(DISCLAIMER_TEXT, canvas.width / 2, panelY + panelHeight / 2);
+      ctx.restore();
     }
 
     function drawHud() {
@@ -702,13 +790,16 @@
     }
 
     function drawPlayer() {
-      ctx.fillStyle = '#070707';
-      ctx.fillRect(Math.round(player.x), Math.round(player.y), player.width, player.height);
-      ctx.fillStyle = '#f6ffe1';
-      ctx.font = '8px "Press Start 2P", "VT323", monospace';
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'center';
-      ctx.fillText('D', Math.round(player.x + player.width / 2), Math.round(player.y + 4));
+      const previousSmoothing = ctx.imageSmoothingEnabled;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        playerSpriteCanvas,
+        Math.round(player.x),
+        Math.round(player.y),
+        player.width,
+        player.height
+      );
+      ctx.imageSmoothingEnabled = previousSmoothing;
     }
 
     function drawPizzas() {
