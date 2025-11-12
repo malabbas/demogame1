@@ -347,9 +347,12 @@
     let mistakes = 0;
     let flashTimer = 0;
     let shakeTimer = 0;
-    let restartTimer = 0;
     let lastTime = 0;
-    let gameState = 'start'; // start, playing, won, restarting
+    let gameState = 'start'; // start, playing, won, lost
+    let losePromptBounds = null;
+
+    const WIN_MESSAGE_FONT_SIZE = 7;
+    const LOSS_MESSAGE_FONT_SIZE = WIN_MESSAGE_FONT_SIZE * 0.5;
 
     function initGame() {
       player.startX = canvas.width / 2 - player.width / 2;
@@ -383,7 +386,7 @@
           case ' ':
             if (gameState === 'start') {
               startGame();
-            } else if (gameState === 'won') {
+            } else if (gameState === 'won' || gameState === 'lost') {
               startGame();
             }
             break;
@@ -415,11 +418,39 @@
         }
       });
 
-      canvas.addEventListener('click', () => {
+      const handleCanvasInteraction = (clientX, clientY) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+
         if (gameState === 'start') {
           startGame();
+          return;
         }
+
+        if (gameState === 'lost' && losePromptBounds) {
+          const { x: bx, y: by, width, height } = losePromptBounds;
+          if (x >= bx && x <= bx + width && y >= by && y <= by + height) {
+            startGame();
+          }
+        }
+      };
+
+      canvas.addEventListener('click', (event) => {
+        handleCanvasInteraction(event.clientX, event.clientY);
       });
+
+      canvas.addEventListener(
+        'touchstart',
+        (event) => {
+          if (!event.changedTouches.length) return;
+          const touch = event.changedTouches[0];
+          handleCanvasInteraction(touch.clientX, touch.clientY);
+        },
+        { passive: true }
+      );
 
       replayButton.addEventListener('click', () => {
         if (gameState === 'won') {
@@ -525,7 +556,8 @@
       resetGameState();
       gameState = 'playing';
       replayButton.style.display = 'none';
-      restartTimer = 0;
+      losePromptBounds = null;
+      canvas.style.cursor = 'default';
       playBackgroundMusic();
     }
 
@@ -609,19 +641,14 @@
     }
 
     function update(delta) {
-      if (gameState === 'start') {
-        return;
+      if (flashTimer > 0) {
+        flashTimer -= delta;
+      }
+      if (shakeTimer > 0) {
+        shakeTimer -= delta;
       }
 
-      if (gameState === 'restarting') {
-        restartTimer -= delta;
-        if (restartTimer <= 0) {
-          startGame();
-        }
-        return;
-      }
-
-      if (gameState === 'won') {
+      if (gameState === 'start' || gameState === 'won' || gameState === 'lost') {
         return;
       }
 
@@ -629,13 +656,6 @@
       moveObstacles(delta);
       checkPizzaCollection();
       checkObstacleCollision();
-
-      if (flashTimer > 0) {
-        flashTimer -= delta;
-      }
-      if (shakeTimer > 0) {
-        shakeTimer -= delta;
-      }
     }
 
     function handleInput(delta) {
@@ -725,11 +745,9 @@
         player.y = player.startY;
 
         if (mistakes >= MAX_MISTAKES) {
-          restartTimer = 900; // ~0.9 seconds
-          gameState = 'restarting';
+          gameState = 'lost';
           stopBackgroundMusic();
           playAudioInstance(gameOverSound);
-          resetGameState();
         }
       }
     }
@@ -745,6 +763,11 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       drawGrid();
+
+      if (gameState !== 'lost') {
+        losePromptBounds = null;
+        canvas.style.cursor = 'default';
+      }
 
       if (gameState === 'start') {
         drawStartScreen();
@@ -764,8 +787,8 @@
           drawWinOverlay();
         }
 
-        if (gameState === 'restarting') {
-          drawRestartOverlay();
+        if (gameState === 'lost') {
+          drawLoseOverlay();
         }
       }
 
@@ -902,26 +925,57 @@
       ctx.strokeRect(32, 64, canvas.width - 64, canvas.height - 128);
 
       ctx.fillStyle = '#f6ffe1';
-      ctx.font = '10px "Press Start 2P", "VT323", monospace';
+      ctx.font = `${WIN_MESSAGE_FONT_SIZE}px "Press Start 2P", "VT323", monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('You Won 10 Large Pizzas!', canvas.width / 2, 120);
-      ctx.fillText('(Demo only – no real prize.)', canvas.width / 2, 140);
-      ctx.fillText('Press Enter or Play Again', canvas.width / 2, 172);
+
+      const centerX = canvas.width / 2;
+      const baseY = 118;
+      const lineSpacing = WIN_MESSAGE_FONT_SIZE + 14;
+
+      ctx.fillText('You Won 10 Large Pizzas!', centerX, baseY);
+      ctx.fillText('(Demo only – no real prize.)', centerX, baseY + lineSpacing);
+      ctx.fillText('Press Enter or Play Again', centerX, baseY + lineSpacing * 2);
     }
 
-    function drawRestartOverlay() {
-      ctx.fillStyle = 'rgba(30, 42, 30, 0.85)';
-      ctx.fillRect(36, 100, canvas.width - 72, 64);
+    function drawLoseOverlay() {
+      const overlayWidth = canvas.width - 80;
+      const overlayHeight = 84;
+      const overlayX = (canvas.width - overlayWidth) / 2;
+      const overlayY = (canvas.height - overlayHeight) / 2;
+
+      ctx.fillStyle = 'rgba(30, 42, 30, 0.92)';
+      ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
       ctx.strokeStyle = '#f6ffe1';
       ctx.lineWidth = 2;
-      ctx.strokeRect(36, 100, canvas.width - 72, 64);
+      ctx.strokeRect(overlayX, overlayY, overlayWidth, overlayHeight);
 
       ctx.fillStyle = '#f6ffe1';
-      ctx.font = '5px "Press Start 2P", "VT323", monospace';
+      ctx.font = `${LOSS_MESSAGE_FONT_SIZE}px "Press Start 2P", "VT323", monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Too many crashes! Restarting…', canvas.width / 2, 132);
+
+      const centerX = canvas.width / 2;
+      const verticalSpacing = LOSS_MESSAGE_FONT_SIZE + 6;
+      const firstLineY = overlayY + overlayHeight / 2 - verticalSpacing / 2;
+      const secondLineY = firstLineY + verticalSpacing;
+
+      ctx.fillText('You lost!', centerX, firstLineY);
+
+      const retryText = 'Press here to try again.';
+      ctx.fillText(retryText, centerX, secondLineY);
+
+      const metrics = ctx.measureText(retryText);
+      const textHeight =
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent || LOSS_MESSAGE_FONT_SIZE;
+      losePromptBounds = {
+        x: centerX - metrics.width / 2 - 4,
+        y: secondLineY - textHeight / 2 - 4,
+        width: metrics.width + 8,
+        height: textHeight + 8,
+      };
+
+      canvas.style.cursor = 'pointer';
     }
 
     function gameLoop(timestamp) {
