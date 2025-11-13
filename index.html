@@ -72,6 +72,65 @@
       box-shadow: 0 0 0 8px #1a1a1a;
     }
 
+    .retry-gate {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      font-size: clamp(0.4rem, 1.5vw, 0.6rem);
+      color: #dcdcdc;
+      gap: 0.4rem;
+      max-width: 320px;
+    }
+
+    .retry-gate.active {
+      display: flex;
+    }
+
+    .retry-controls {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .retry-input {
+      flex: 1;
+      min-width: 0;
+      border: 2px solid #070707;
+      background: #cfd2b2;
+      color: #070707;
+      font-family: 'Press Start 2P', 'VT323', monospace;
+      font-size: 0.5rem;
+      padding: 0.3rem 0.4rem;
+      text-transform: none;
+      letter-spacing: 0.05em;
+    }
+
+    .retry-submit {
+      border: 2px solid #070707;
+      background: #d8e4cc;
+      color: #070707;
+      font-family: 'Press Start 2P', 'VT323', monospace;
+      font-size: 0.5rem;
+      padding: 0.35rem 0.45rem;
+      cursor: pointer;
+      text-transform: inherit;
+      letter-spacing: inherit;
+    }
+
+    .retry-submit:active {
+      transform: translateY(1px);
+    }
+
+    .retry-error {
+      margin: 0;
+      font-size: clamp(0.34rem, 1.2vw, 0.48rem);
+      color: #ff8a8a;
+      min-height: 0.6rem;
+    }
+
     .replay {
       display: none;
       border: 4px solid var(--border);
@@ -171,6 +230,23 @@
   </div>
   <div class="game-shell">
     <canvas id="game" width="320" height="288"></canvas>
+    <div id="retry-gate" class="retry-gate" hidden>
+      <p class="retry-message">You lost! Type ‘Pizza Pizaa’ to try again.</p>
+      <div class="retry-controls">
+        <input
+          id="retry-input"
+          class="retry-input"
+          type="text"
+          maxlength="20"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <button id="retry-submit" class="retry-submit">Submit</button>
+      </div>
+      <p id="retry-error" class="retry-error" role="alert"></p>
+    </div>
     <button id="replay" class="replay">Play Again</button>
     <div class="dpad" aria-label="Directional controls">
       <button class="dpad-button up" data-direction="up" aria-label="Move up">▲</button>
@@ -183,6 +259,10 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const replayButton = document.getElementById('replay');
+    const retryGate = document.getElementById('retry-gate');
+    const retryInput = document.getElementById('retry-input');
+    const retrySubmit = document.getElementById('retry-submit');
+    const retryError = document.getElementById('retry-error');
     const dpadButtons = document.querySelectorAll('.dpad-button');
     const DISCLAIMER_TEXT = "Concept demo. Not affiliated with Domino's Pizza.";
     document.querySelector('.disclaimer').textContent = DISCLAIMER_TEXT;
@@ -268,6 +348,8 @@
       }
     });
 
+    const RETRY_PHRASE = 'Pizza Pizaa';
+
     const keyState = {
       up: false,
       down: false,
@@ -349,7 +431,7 @@
     let shakeTimer = 0;
     let lastTime = 0;
     let gameState = 'start'; // start, playing, won, lost
-    let losePromptBounds = null;
+    let awaitingRetryPhrase = false;
 
     const WIN_MESSAGE_FONT_SIZE = 7;
     const LOSS_MESSAGE_FONT_SIZE = WIN_MESSAGE_FONT_SIZE * 0.5;
@@ -386,7 +468,7 @@
           case ' ':
             if (gameState === 'start') {
               startGame();
-            } else if (gameState === 'won' || gameState === 'lost') {
+            } else if (gameState === 'won') {
               startGame();
             }
             break;
@@ -430,12 +512,6 @@
           return;
         }
 
-        if (gameState === 'lost' && losePromptBounds) {
-          const { x: bx, y: by, width, height } = losePromptBounds;
-          if (x >= bx && x <= bx + width && y >= by && y <= by + height) {
-            startGame();
-          }
-        }
       };
 
       canvas.addEventListener('click', (event) => {
@@ -553,12 +629,31 @@
       stopAudioInstance(gameOverSound);
       stopAudioInstance(trafficHitSound);
       stopAudioInstance(pizzaCollectedSound);
+      hideRetryGate();
       resetGameState();
       gameState = 'playing';
       replayButton.style.display = 'none';
-      losePromptBounds = null;
       canvas.style.cursor = 'default';
       playBackgroundMusic();
+    }
+
+    function showRetryGate() {
+      awaitingRetryPhrase = true;
+      retryGate.hidden = false;
+      retryGate.classList.add('active');
+      retryError.textContent = '';
+      retryInput.value = '';
+      setTimeout(() => {
+        retryInput.focus();
+      }, 0);
+    }
+
+    function hideRetryGate() {
+      awaitingRetryPhrase = false;
+      retryGate.hidden = true;
+      retryGate.classList.remove('active');
+      retryError.textContent = '';
+      retryInput.value = '';
     }
 
     function resetGameState() {
@@ -748,6 +843,7 @@
           gameState = 'lost';
           stopBackgroundMusic();
           playAudioInstance(gameOverSound);
+          showRetryGate();
         }
       }
     }
@@ -764,10 +860,7 @@
 
       drawGrid();
 
-      if (gameState !== 'lost') {
-        losePromptBounds = null;
-        canvas.style.cursor = 'default';
-      }
+      canvas.style.cursor = 'default';
 
       if (gameState === 'start') {
         drawStartScreen();
@@ -962,20 +1055,9 @@
 
       ctx.fillText('You lost!', centerX, firstLineY);
 
-      const retryText = 'Press here to try again.';
-      ctx.fillText(retryText, centerX, secondLineY);
+      ctx.fillText('Type the phrase below to try again.', centerX, secondLineY);
 
-      const metrics = ctx.measureText(retryText);
-      const textHeight =
-        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent || LOSS_MESSAGE_FONT_SIZE;
-      losePromptBounds = {
-        x: centerX - metrics.width / 2 - 4,
-        y: secondLineY - textHeight / 2 - 4,
-        width: metrics.width + 8,
-        height: textHeight + 8,
-      };
-
-      canvas.style.cursor = 'pointer';
+      canvas.style.cursor = 'default';
     }
 
     function gameLoop(timestamp) {
@@ -986,6 +1068,29 @@
       draw(timestamp);
 
       requestAnimationFrame(gameLoop);
+    }
+
+    retrySubmit.addEventListener('click', handleRetrySubmission);
+    retryInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        handleRetrySubmission();
+      }
+    });
+
+    retryInput.addEventListener('input', () => {
+      retryError.textContent = '';
+    });
+
+    function handleRetrySubmission() {
+      if (!awaitingRetryPhrase) {
+        return;
+      }
+      if (retryInput.value === RETRY_PHRASE) {
+        hideRetryGate();
+        startGame();
+      } else {
+        retryError.textContent = 'That’s not correct. Try again.';
+      }
     }
 
     initGame();
