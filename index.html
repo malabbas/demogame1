@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PIZZA RUSH AI CAMPAIGN DEMO</title>
+  <title>Pizza Rush | Playable Campaign Concept by Mahmood Alabbas</title>
+  <meta name="description" content="Pizza Rush is a playable arcade campaign concept by Mahmood Alabbas. Collect 10 pizzas, dodge traffic, and explore a retro browser game built with HTML Canvas and JavaScript." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -54,6 +55,15 @@
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 2rem;
+    }
+
+    .portfolio-note {
+      max-width: 580px;
+      margin: 0.3rem 0 0;
+      font-size: clamp(0.4rem, 1.5vw, 0.55rem);
+      line-height: 1.8;
+      text-align: center;
+      text-transform: none;
     }
 
     .game-shell {
@@ -225,17 +235,20 @@
 </head>
 <body>
   <div class="title-block">
-    <h1>PIZZA RUSH AI CAMPAIGN DEMO</h1>
+    <h1>PIZZA RUSH — PLAYABLE CAMPAIGN CONCEPT</h1>
+    <p class="portfolio-note">A browser game portfolio project by Mahmood Alabbas.</p>
     <p class="disclaimer" role="note">Concept demo. Not affiliated with Domino’s Pizza.</p>
   </div>
   <div class="game-shell">
-    <canvas id="game" width="320" height="288"></canvas>
+    <canvas id="game" width="320" height="288" aria-label="Pizza Rush game. Collect 10 pizzas and avoid traffic. Use arrow keys, WASD, or the directional buttons.">Pizza Rush requires a browser with HTML Canvas support.</canvas>
+    <p class="portfolio-note">Press Enter or tap the game to start. Move with arrow keys, WASD, or the buttons below. Collect 10 pizzas before 5 traffic hits.</p>
     <div id="retry-gate" class="retry-gate" hidden>
       <p class="retry-message">You lost! Type ‘Pizza Pizaa’ to try again.</p>
       <div class="retry-controls">
         <input
           id="retry-input"
           class="retry-input"
+          aria-label="Type Pizza Pizaa to try again"
           type="text"
           maxlength="20"
           autocomplete="off"
